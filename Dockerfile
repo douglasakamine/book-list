@@ -37,4 +37,9 @@ COPY --from=composer $LARAVEL_PATH $LARAVEL_PATH
 
 RUN chown -R www-data $LARAVEL_PATH/storage
 
+RUN apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_14.x | sed "s/exec_cmd 'apt-get update'/exec_cmd 'apt-get --allow-releaseinfo-change update'/" | bash -
+RUN apt-get install -y nodejs --fix-missing
+RUN npm install
+
 WORKDIR $LARAVEL_PATH
