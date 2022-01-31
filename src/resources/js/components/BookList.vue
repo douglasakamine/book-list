@@ -49,8 +49,8 @@
                         <b-row align-h="end">
                             <b-col cols="6">
                                 <b-dropdown id="dropdown-1" text="Export data" class="mb-3">
-                                    <b-dropdown-item  @click="exportBooks('CSV')">CSV</b-dropdown-item>
-                                    <b-dropdown-item  @click="exportBooks('XML')">XML</b-dropdown-item>
+                                    <b-dropdown-item  @click="exportBooksToCsv()">CSV</b-dropdown-item>
+                                    <b-dropdown-item  @click="exportBooksToXml()">XML</b-dropdown-item>
                                 </b-dropdown>
                             </b-col>
                             <b-col cols="6">
@@ -111,6 +111,9 @@
 </template>
 
 <script>
+    const CSV = "csv";
+    const XML = "xml";
+
     export default {
         data() {
             return {
@@ -158,14 +161,24 @@
                     this.getBooks();
                 });
             },
-            exportBooks(type) {
-                axios.get(`api/book/export?type=${type}`).then((response) => {
-                    let blob = new Blob([response.data], { type: 'application/csv' })
-                    let link = document.createElement('a')
-                    link.href = window.URL.createObjectURL(blob)
-                    link.download = 'test.csv'
-                    link.click()
+            exportBooksToCsv() {
+                const CSV = "csv";
+                axios.get('api/book/exportcsv').then((response) => {
+                    this.downloadFile(response.data, CSV);
                 });
+            },
+            exportBooksToXml() {
+                const XML = "xml";
+                axios.get('api/book/exportxml').then((response) => {
+                    this.downloadFile(response.data, XML);
+                });
+            },
+            downloadFile(file, type) {
+                let blob = new Blob([file], { type: `application/${type}` });
+                let link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `books.${type}`;
+                link.click();
             },
             getInitialForm() {
                 return {
