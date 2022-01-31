@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Books;
-use Illuminate\Support\Facades\Log;
+use Response;
+use File;
 
 class BooksController extends Controller
 {
     public function getBooks(Request $request) {
 
-        $booksQuery = Books::select('id','title','author');
+        $booksQuery = Books::select('id','title','author')->orderBy('created_at','DESC');
         $searchCriteria = $request->input('searchCriteria');
 
         if($searchCriteria !== null) {
@@ -44,6 +45,47 @@ class BooksController extends Controller
         return $filteredQuery;
     }
 
+    //
+    public function exportDataToCsv() {
 
+        $books = Books::get();
+        $headers = ['Content-Type' => 'application/vnd.ms-excel; charset=utf-8'];
+
+        if (!File::exists(public_path()."/files")) {
+            File::makeDirectory(public_path() . "/files");
+        }
+        $filename =  public_path("files/books.csv");
+        $handle = fopen($filename, 'w');
+
+        fputcsv($handle, [
+            "Title",
+            "Author",
+        ]);
+
+        foreach ($books as $row) {
+            fputcsv($handle, [
+                $row->title,
+                $row->author,
+            ]);
+        }
+        fclose($handle);
+
+        return Response::download($filename, "books.csv", $headers);
+    }
+
+    public function exportDataToXml() {
+
+        $books = Books::get();
+        $xml = new \SimpleXMLElement("<root/>");
+
+        foreach ($books as $row) {
+            $booksElement = $xml->addChild("books");
+            $booksElement->addChild("title", $row->title);
+            $booksElement->addChild("author", $row->author);
+        }
+        header("Content-type: text/xml");
+        header('Content-Disposition: attachment; filename="books.xml"');
+        return $xml->asXML();
+    }
 
 }
