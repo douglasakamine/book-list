@@ -10,6 +10,8 @@
                         <b-form-group
                             id="input-group-1"
                             label="Title:"
+                            label-cols="4" 
+                            label-cols-lg="2"
                             label-for="input-1"
                         >
                             <b-form-input
@@ -24,6 +26,8 @@
                         <b-form-group
                             id="input-group-2"
                             label="Author:"
+                            label-cols="4" 
+                            label-cols-lg="2"
                             label-for="input-2"
                         >
                             <b-form-input
@@ -35,7 +39,7 @@
                         </b-form-group>
                         <b-row align-h="end">
                             <b-col cols="6" class="text-right">
-                                <b-button @click="addBook()" variant="primary">Add</b-button>
+                                <b-button @click="addBook()" variant="success">Add</b-button>
                             </b-col>  
                         </b-row>
                     </div>
@@ -45,8 +49,8 @@
                         <b-row align-h="end">
                             <b-col cols="6">
                                 <b-dropdown id="dropdown-1" text="Export data" class="mb-3">
-                                    <b-dropdown-item  @click="exportBook('CSV')">CSV</b-dropdown-item>
-                                    <b-dropdown-item  @click="exportBook('XML')">XML</b-dropdown-item>
+                                    <b-dropdown-item  @click="exportBooks('CSV')">CSV</b-dropdown-item>
+                                    <b-dropdown-item  @click="exportBooks('XML')">XML</b-dropdown-item>
                                 </b-dropdown>
                             </b-col>
                             <b-col cols="6">
@@ -58,7 +62,7 @@
                                         <b-button 
                                             size="sm" 
                                             text="Button" 
-                                            variant="success"
+                                            variant="primary"
                                             @click="search()"
                                         >
                                         Search
@@ -73,8 +77,7 @@
                             hover 
                             :items="items" 
                             :fields="fields"
-                            fixed
-                        >
+                        >   
                             <template
                                 slot="cell(delete)"   
                                 slot-scope="items"
@@ -91,8 +94,18 @@
                 </div>
             </div>
         </div>
-        <b-modal id="delete-modal" title="Delete Book" @ok="deleteBook()">
-            <p class="my-4">{{ deleteModalText }}</p>
+        <b-modal
+            id="delete-modal" 
+            title="Delete Book" 
+            centered
+            header-bg-variant="danger"
+            header-text-variant="light"
+            ok-title="Yes"
+            ok-variant="danger"
+            cancel-title="No"
+
+            @ok="deleteBook()">
+                <p class="my-4">{{ deleteModalText }}</p>
         </b-modal>
     </div>
 </template>
@@ -115,6 +128,7 @@
                     },
                     {
                         key: 'delete',
+                        class: 'w-10',
                         sortable: false
                     }
                 ],
@@ -142,6 +156,15 @@
                 axios.delete(`api/book/delete/${this.deleteTarget.id}`)
                 .then((response) => {
                     this.getBooks();
+                });
+            },
+            exportBooks(type) {
+                axios.get(`api/book/export?type=${type}`).then((response) => {
+                    let blob = new Blob([response.data], { type: 'application/csv' })
+                    let link = document.createElement('a')
+                    link.href = window.URL.createObjectURL(blob)
+                    link.download = 'test.csv'
+                    link.click()
                 });
             },
             getInitialForm() {
