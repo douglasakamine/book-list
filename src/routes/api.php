@@ -16,6 +16,6 @@ use Illuminate\Http\Request;
 Route::middleware('api')->group(function () {
     Route::get('/book/get', 'BooksController@getBooks')->name('book.get');
     Route::post('/book/save', 'BooksController@saveBook')->name('book.save');
-
+    Route::delete('/book/delete/{id}', 'BooksController@deleteBook')->name('book.delete');
+    Route::get('/book/export', 'BooksController@exportData')->name('book.export');
 });
-
