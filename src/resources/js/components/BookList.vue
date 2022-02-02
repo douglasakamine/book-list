@@ -100,6 +100,7 @@
                             :items="items" 
                             :fields="fields"
                             fixed
+                            show-empty
                         >   
                             <template
                                 slot="cell(title)"   
@@ -146,6 +147,14 @@
                 </div>
             </div>
         </div>
+
+        <b-overlay v-if="loading"
+            show
+            :opacity="0.5"
+            rounded="lg"
+            fixed
+            no-wrap
+        ></b-overlay>
         <b-modal
             id="delete-modal" 
             title="Delete Book" 
@@ -229,27 +238,33 @@
                     { text: "Title", value: "title"},
                     { text: "Author", value: "author"}
                 ],
-                editMode: false
+                editMode: false,
+                loading: false
             }
         },
         methods: {
             getBooks() {
+                this.loading = true;
                 axios.get(`api/book/get?searchCriteria=${this.searchCriteria}`).then((response) => {
                     this.items = response.data;
+                    this.loading = false;
                 });
             },
             search() {
                 this.getBooks();
             },  
             addBook() {
+                this.loading = true;
                 axios.post('api/book/save', this.form)
                 .then((response) => {
                     this.successAlert = true;
                     this.form = this.getInitialForm();
                     this.getBooks();
+                    this.loading = false;
                     Vue.toasted.success('Book successfully added');
                 }),(error) => {
                     console.log(error);
+                    this.loading = false;
                     Vue.toasted.error('Error while adding');
                 };
             },
@@ -260,24 +275,30 @@
                 el.scrollIntoView({ behavior: 'smooth'});
             },
             editBook() {
+                this.loading = true;
                 axios.patch('api/book/edit', this.form)
                 .then((response) => {
                     this.editMode = false;
                     this.form = this.getInitialForm();
                     this.getBooks();
+                    this.loading = false;
                     Vue.toasted.success('Book successfully edited');
                 }),(error) => {
                     console.log(error);
+                    this.loading = false;
                     Vue.toasted.error('Error while editing');
                 };
             },
             deleteBook() {
+                this.loading = true;
                 axios.delete(`api/book/delete/${this.deleteTarget.id}`)
                 .then((response) => {
                     this.getBooks();
+                    this.loading = false;
                     Vue.toasted.info('Book Deleted');
                 }),(error) => {
                     console.log(error);
+                    this.loading = false;
                     Vue.toasted.error('Error while deleting');
                 };
             },
@@ -286,16 +307,20 @@
                 this.form = this.getInitialForm();
             },
             exportBooksToCsv() {
+                this.loading = true;
                 const CSV = "csv";
                 let exportInfo = this.serializeExportInfo();
                 axios.post('api/book/exportcsv', exportInfo).then((response) => {
+                    this.loading = false;
                     this.downloadFile(response.data, CSV);
                 });
             },
             exportBooksToXml() {
+                this.loading = true;
                 const XML = "xml";
                 let exportInfo = this.serializeExportInfo();
                 axios.post('api/book/exportxml', exportInfo).then((response) => {
+                    this.loading = false;
                     this.downloadFile(response.data, XML);
                 });
             },
