@@ -6,7 +6,7 @@
                     <div class="card-header text-center">
                         <h2>Book List</h2>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" ref="form">
                         <b-form-group
                             id="input-group-1"
                             label="Title:"
@@ -39,7 +39,20 @@
                         </b-form-group>
                         <b-row align-h="end">
                             <b-col cols="6" class="text-right">
-                                <b-button @click="addBook()" variant="success">Add</b-button>
+                                <b-button
+                                    v-if="editMode"
+                                    @click="editBook()" 
+                                    variant="primary"
+                                >
+                                    Save
+                                </b-button>
+                                <b-button
+                                    v-else
+                                    @click="addBook()" 
+                                    variant="success"
+                                >
+                                    Add
+                                </b-button>
                             </b-col>  
                         </b-row>
                     </div>
@@ -54,7 +67,10 @@
                                 <b-input-group
                                     class="mb-3"
                                 >
-                                    <b-form-input v-model="searchCriteria"></b-form-input>
+                                    <b-form-input 
+                                        @keypress="search()" 
+                                        v-model="searchCriteria"
+                                    ></b-form-input>
                                     <b-input-group-append>
                                         <b-button 
                                             size="sm" 
@@ -79,6 +95,11 @@
                                 slot="cell(delete)"   
                                 slot-scope="items"
                             >
+                                <b-button variant="info"
+                                    @click="loadBookToBeEdited(items.index)"
+                                >
+                                    <b-icon icon="pencil-square"></b-icon>
+                                </b-button>
                                 <b-button variant="danger"
                                     v-b-modal.delete-modal
                                     @click="deleteTarget = items.item"
@@ -123,13 +144,6 @@
 
             <template slot="modal-footer">
                 <b-button
-                    class="mr-auto"
-                    variant="secondary"
-                    bv::hide::modal
-                >
-                    Cancel
-                </b-button>
-                <b-button
                     variant="info"
                     @click="exportBooksToCsv()"
                 >
@@ -168,7 +182,8 @@
                     {
                         key: 'delete',
                         class: 'w-10',
-                        sortable: false
+                        sortable: false,
+                        label: ''
                     }
                 ],
                 deleteTarget: {},
@@ -177,7 +192,8 @@
                 exportColumns: [
                     { text: "Title", value: "title"},
                     { text: "Author", value: "author"}
-                ]
+                ],
+                editMode: false
             }
         },
         methods: {
@@ -192,6 +208,21 @@
             addBook() {
                 axios.post('api/book/save', this.form)
                 .then((response) => {
+                    this.successAlert = true;
+                    this.form = this.getInitialForm();
+                    this.getBooks();
+                });
+            },
+            loadBookToBeEdited(index) {
+                this.editMode = true;
+                this.form = this.items[index];
+                let el = this.$refs.form;
+                el.scrollIntoView({ behavior: 'smooth'});
+            },
+            editBook() {
+                axios.patch('api/book/edit', this.form)
+                .then((response) => {
+                    this.editMode = false;
                     this.form = this.getInitialForm();
                     this.getBooks();
                 });

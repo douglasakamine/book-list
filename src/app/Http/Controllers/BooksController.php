@@ -32,6 +32,17 @@ class BooksController extends Controller
         return $request;
     }
 
+    public function editBook(Request $request) {
+
+        $bookId = $request->input('id');
+        $update = Books::findOrFail($bookId);
+        $update->title = $request->input('title');
+        $update->author = $request->input('author');
+        $update->save();
+
+        return $request;
+    }
+
     public function deleteBook(string $id) {
 
         $result = Books::where('id', $id)->delete();
