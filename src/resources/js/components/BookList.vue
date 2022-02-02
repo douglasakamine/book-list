@@ -48,10 +48,7 @@
                     <div class="card-body">
                         <b-row align-h="end">
                             <b-col cols="6">
-                                <b-dropdown id="dropdown-1" text="Export data" class="mb-3">
-                                    <b-dropdown-item  @click="exportBooksToCsv()">CSV</b-dropdown-item>
-                                    <b-dropdown-item  @click="exportBooksToXml()">XML</b-dropdown-item>
-                                </b-dropdown>
+                                <b-button v-b-modal.export-modal>Export to file</b-button>
                             </b-col>
                             <b-col cols="6">
                                 <b-input-group
@@ -104,8 +101,47 @@
             ok-variant="danger"
             cancel-title="No"
 
-            @ok="deleteBook()">
-                <p class="my-4">{{ deleteModalText }}</p>
+            @ok="deleteBook()"
+        >
+            <p class="my-4">{{ deleteModalText }}</p>
+        </b-modal>
+
+        <b-modal
+            id="export-modal" 
+            title="Export to File"
+            header-bg-variant="primary"
+            centered
+        >
+            <b-form-group
+                label="What informations would you like to export?"
+            >
+            <b-form-checkbox-group
+                v-model="selectedColumns"
+                :options="exportColumns"
+            ></b-form-checkbox-group>
+            </b-form-group>
+
+            <template slot="modal-footer">
+                <b-button
+                    class="mr-auto"
+                    variant="secondary"
+                    bv::hide::modal
+                >
+                    Cancel
+                </b-button>
+                <b-button
+                    variant="info"
+                    @click="exportBooksToCsv()"
+                >
+                    CSV
+                </b-button>
+                <b-button
+                    variant="primary"
+                    @click="exportBooksToXml()"
+                >
+                    XML
+                </b-button>
+            </template>
         </b-modal>
     </div>
 </template>
@@ -136,7 +172,12 @@
                     }
                 ],
                 deleteTarget: {},
-                deleteModalText: "Are you sure to delete this book?"
+                deleteModalText: "Are you sure to delete this book?",
+                selectedColumns: ["title", "author"],
+                exportColumns: [
+                    { text: "Title", value: "title"},
+                    { text: "Author", value: "author"}
+                ]
             }
         },
         methods: {
@@ -163,15 +204,27 @@
             },
             exportBooksToCsv() {
                 const CSV = "csv";
-                axios.get('api/book/exportcsv').then((response) => {
+                let exportInfo = this.serializeExportInfo();
+                axios.post('api/book/exportcsv', exportInfo).then((response) => {
                     this.downloadFile(response.data, CSV);
                 });
             },
             exportBooksToXml() {
                 const XML = "xml";
-                axios.get('api/book/exportxml').then((response) => {
+                let exportInfo = this.serializeExportInfo();
+                axios.post('api/book/exportxml', exportInfo).then((response) => {
                     this.downloadFile(response.data, XML);
                 });
+            },
+            serializeExportInfo() {
+                let exportInfo = {
+                    title: false,
+                    author: false
+                };
+                if(this.selectedColumns.includes("title")) exportInfo.title = true;
+                if(this.selectedColumns.includes("author")) exportInfo.author = true;
+
+                return exportInfo;
             },
             downloadFile(file, type) {
                 let blob = new Blob([file], { type: `application/${type}` });

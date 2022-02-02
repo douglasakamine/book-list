@@ -46,7 +46,10 @@ class BooksController extends Controller
     }
 
     //
-    public function exportDataToCsv() {
+    public function exportDataToCsv(Request $request) {
+
+        $title = $request->input('title');
+        $author = $request->input('author');
 
         $books = Books::get();
         $headers = ['Content-Type' => 'application/vnd.ms-excel; charset=utf-8'];
@@ -57,35 +60,39 @@ class BooksController extends Controller
         $filename =  public_path("files/books.csv");
         $handle = fopen($filename, 'w');
 
-        fputcsv($handle, [
-            "Title",
-            "Author",
-        ]);
+        //Building the file header
+        $arrayFileHeader = array();
+        if($title) array_push($arrayFileHeader, "Title");
+        if($author) array_push($arrayFileHeader, "Author");
+        fputcsv($handle, $arrayFileHeader);
 
+        //Building the file body
         foreach ($books as $row) {
-            fputcsv($handle, [
-                $row->title,
-                $row->author,
-            ]);
+            $arrayFileBody = array();
+            if($title) array_push($arrayFileBody, $row->title);
+            if($author) array_push($arrayFileBody, $row->author);
+            fputcsv($handle, $arrayFileBody);
         }
         fclose($handle);
 
         return Response::download($filename, "books.csv", $headers);
     }
 
-    public function exportDataToXml() {
+    public function exportDataToXml(Request $request) {
+
+        $title = $request->input('title');
+        $author = $request->input('author');
 
         $books = Books::get();
         $xml = new \SimpleXMLElement("<root/>");
 
         foreach ($books as $row) {
             $booksElement = $xml->addChild("books");
-            $booksElement->addChild("title", $row->title);
-            $booksElement->addChild("author", $row->author);
+            if($title) $booksElement->addChild("title", $row->title);
+            if($author) $booksElement->addChild("author", $row->author);
         }
         header("Content-type: text/xml");
         header('Content-Disposition: attachment; filename="books.xml"');
         return $xml->asXML();
     }
-
 }
