@@ -10,6 +10,12 @@ use File;
 
 class BooksController extends Controller
 {
+    /**
+     * Retrieves books data from Mysql DB
+     *
+     * @param Request $request
+     * @return Collection $result
+     */
     public function getBooks(Request $request) {
 
         $booksQuery = Books::select('id','title','author')->orderBy('created_at','DESC');
@@ -22,16 +28,24 @@ class BooksController extends Controller
         return $result;
     }
 
+    /**
+     * Save book title and author to Mysql DB
+     *
+     * @param Request $request
+     */
     public function saveBook(Request $request) {
 
         $update = new Books;
         $update->title = $request->input('title');
         $update->author = $request->input('author');
         $update->save();
-
-        return $request;
     }
 
+    /**
+     * Edit book title or author to Mysql DB
+     *
+     * @param Request $request
+     */
     public function editBook(Request $request) {
 
         $bookId = $request->input('id');
@@ -39,16 +53,25 @@ class BooksController extends Controller
         $update->title = $request->input('title');
         $update->author = $request->input('author');
         $update->save();
-
-        return $request;
     }
 
+    /**
+     * Delete book data from Mysql DB
+     *
+     * @param string $id book id
+     */
     public function deleteBook(string $id) {
 
         $result = Books::where('id', $id)->delete();
-        return $result;
     }
 
+    /**
+     * Filter query by a search word criteria
+     *
+     * @param Query $query raw query from getBooks
+     * @param string $searchCriteria word inserted in search bar
+     * @return Query $filtered query
+     */
     private function filterBySearchCriteria($query, $searchCriteria) {
 
         $filteredQuery = $query->where('title', 'LIKE', "%{$searchCriteria}%")
@@ -56,7 +79,12 @@ class BooksController extends Controller
         return $filteredQuery;
     }
 
-    //
+    /**
+     * Return data from DB in CSV format
+     *
+     * @param Request $request
+     * @return Response csv file to download
+     */
     public function exportDataToCsv(Request $request) {
 
         $title = $request->input('title');
@@ -89,6 +117,12 @@ class BooksController extends Controller
         return Response::download($filename, "books.csv", $headers);
     }
 
+    /**
+     * Return data from DB in XML format
+     *
+     * @param Request $request
+     * @return object xml file
+     */
     public function exportDataToXml(Request $request) {
 
         $title = $request->input('title');
