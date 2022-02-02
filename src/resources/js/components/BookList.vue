@@ -41,6 +41,13 @@
                             <b-col cols="6" class="text-right">
                                 <b-button
                                     v-if="editMode"
+                                    @click="cancelEdition()" 
+                                    variant="secondary"
+                                >
+                                    Cancel
+                                </b-button>
+                                <b-button
+                                    v-if="editMode"
                                     @click="editBook()" 
                                     variant="primary"
                                 >
@@ -67,7 +74,8 @@
                                 <b-input-group
                                     class="mb-3"
                                 >
-                                    <b-form-input 
+                                    <b-form-input
+                                        placeholder="Search by a title or author..."
                                         @keypress="search()" 
                                         v-model="searchCriteria"
                                     ></b-form-input>
@@ -85,14 +93,40 @@
                             </b-col>
                         </b-row>
 
-                        <b-table 
+                        <b-table
+                            class="books-table"
                             striped 
                             hover 
                             :items="items" 
                             :fields="fields"
+                            fixed
                         >   
                             <template
-                                slot="cell(delete)"   
+                                slot="cell(title)"   
+                                slot-scope="items"
+                            >
+                            <span :id="`title-id-${items.item.id}`">{{ items.item.title }}</span>
+                            <b-popover
+                                :target="`title-id-${items.item.id}`"
+                                placement="bottomright"
+                                triggers="hover focus"
+                                :content="items.item.title"
+                            ></b-popover>
+                            </template>
+                            <template
+                                slot="cell(author)"   
+                                slot-scope="items"
+                            >
+                            <span :id="`author-id-${items.item.id}`">{{ items.item.author }}</span>
+                            <b-popover
+                                :target="`author-id-${items.item.id}`"
+                                placement="bottomright"
+                                triggers="hover focus"
+                                :content="items.item.author"
+                            ></b-popover>
+                            </template>
+                            <template
+                                slot="cell(buttons)"   
                                 slot-scope="items"
                             >
                                 <b-button variant="info"
@@ -173,15 +207,17 @@
                 fields: [
                     {
                         key: 'title',
+                        class: 'title-col',
                         sortable: true
                     },
                     {
                         key: 'author',
+                        class: 'author-col',
                         sortable: true
                     },
                     {
-                        key: 'delete',
-                        class: 'w-10',
+                        key: 'buttons',
+                        class: 'buttons',
                         sortable: false,
                         label: ''
                     }
@@ -211,11 +247,15 @@
                     this.successAlert = true;
                     this.form = this.getInitialForm();
                     this.getBooks();
-                });
+                    Vue.toasted.success('Book successfully added');
+                }),(error) => {
+                    console.log(error);
+                    Vue.toasted.error('Error while adding');
+                };
             },
             loadBookToBeEdited(index) {
                 this.editMode = true;
-                this.form = this.items[index];
+                this.form = {...this.items[index]};
                 let el = this.$refs.form;
                 el.scrollIntoView({ behavior: 'smooth'});
             },
@@ -225,13 +265,25 @@
                     this.editMode = false;
                     this.form = this.getInitialForm();
                     this.getBooks();
-                });
+                    Vue.toasted.success('Book successfully edited');
+                }),(error) => {
+                    console.log(error);
+                    Vue.toasted.error('Error while editing');
+                };
             },
             deleteBook() {
                 axios.delete(`api/book/delete/${this.deleteTarget.id}`)
                 .then((response) => {
                     this.getBooks();
-                });
+                    Vue.toasted.info('Book Deleted');
+                }),(error) => {
+                    console.log(error);
+                    Vue.toasted.error('Error while deleting');
+                };
+            },
+            cancelEdition() {
+                this.editMode = false;
+                this.form = this.getInitialForm();
             },
             exportBooksToCsv() {
                 const CSV = "csv";
@@ -276,3 +328,15 @@
         }
     }
 </script>
+
+<style scoped>
+
+.books-table >>> .buttons {
+    width: 20%;
+}
+.books-table >>> .title-col, .books-table >>> .author-col {
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+</style>

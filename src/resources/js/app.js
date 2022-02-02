@@ -38,6 +38,12 @@ Vue.component('book-list', require('./components/BookList.vue').default);
  // Optionally install the BootstrapVue icon components plugin
  Vue.use(IconsPlugin)
 
+ import Toasted from 'vue-toasted';
+ Vue.use(Toasted, {
+     position: 'bottom-right',
+     duration: 5000
+ });
+
 const app = new Vue({
     el: '#app',
 });
